@@ -3,7 +3,7 @@ const Group=require("./schema");
 class GroupRepo{
     constructor(request){
         this.requestBody=request?.body;
-        this.userId=request.userId;
+       this.userId = request?.user?.userId;
     }
 
     async create(){
