@@ -14,7 +14,8 @@ exports.create=async(req,res)=>{
 exports.getUserChats=async(req,res)=>{
     const chatRepo= new Repository(req)
  try{
-    const chat=await chatRepo.getChatsForUser(req.params.userId);
+    const chat=await chatRepo.getChatsForUser(req.userId);
+    console.log(req.userId);
   return  handler.successResponse(res,chat,"Chat Fetch successfully");
  }catch(error){
   return  handler.errorResponse(res,error)

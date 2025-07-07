@@ -1,38 +1,54 @@
 const mongoose=require('mongoose');
 
 const messageSchema=new mongoose.Schema({
-    sender:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
-        required:true
+   chat: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Chat",
+      required: true,
     },
-    receiver:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:'User',
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
-    group:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Group"
+    content: {
+      type: String,
+      required: true,
     },
-    content:{
-        type:'String',
-        required:true
+    messageType: {
+      type: String,
+      enum: ["text", "image", "video", "file"],
+      default: "text",
     },
-    messageType:{
-        type:String,
-        enum:["text","image","video","file"],
-        default:"text"
+    isEdited: {
+      type: Boolean,
+      default: false,
     },
-    isEdited:{
-      type:Boolean,
-      default:false
+    deletedBy: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    replyTo: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Message",
     },
-    deletedBy:[{
-         type:mongoose.Schema.Types.ObjectId,
-        ref:'User'
-    }]
-
-},{
+    forwardedFrom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+    reactions: [
+      {
+        emoji: String,
+        user: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ]
+  },
+{
    timestamps: true,
     versionKey: false,
     toJSON: { virtuals: true },

@@ -14,7 +14,8 @@ const userSchema = new mongoose.Schema({
                 return /^[6-9]\d{9}$/.test(v); 
             },
             message: props => `${props.value} is not a valid Indian phone number!`
-        }
+        },
+        unique:true
     },
 
     image: {

@@ -7,6 +7,6 @@ router.use("/groups",require("./group"))
 router.use("/message",require("./message"))
 router.use("/reports",require("./report"))
 router.use("/auth",require("./auth"));
-router.use("/chat",require("./chat"))
+router.use("/chats",require("./chat"))
 
 module.exports=router;
