@@ -27,4 +27,4 @@ const chatSchema = new mongoose.Schema({
     toObject: { virtuals: true }  
 });
 
-model.exports=mongoose.model('Chat',chatSchema);
+module.exports=mongoose.model('Chat',chatSchema);

@@ -4,7 +4,7 @@ const routes=express.Router();
 const chatController=require("../chat/controller")
 const auth=require("../middleware/auth")
 
-routes.post("/chats", auth, chatController.createChat);
-routes.get("/allchats",auth,chatController.getUserChats);
+routes.post("/chats", auth, chatController.create);
+routes.get("/chats",auth,chatController.getUserChats);
 
 module.exports=routes;
