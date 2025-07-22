@@ -8,8 +8,8 @@ exports.sendOtp = async (request, response) => {
     try {
 
         const { phoneNumber } = request.body;
-        const { hashedOtp } = await auth.generateSecureOtp(phoneNumber);
-        handler.successResponse(response, hashedOtp, 'OTP create successfully');
+        const { hashedOtp,otp } = await auth.generateSecureOtp(phoneNumber);
+        handler.successResponse(response, {hashedOtp,otp}, 'OTP create successfully');
     }
     catch (error) {
         handler.errorResponse(response, error);

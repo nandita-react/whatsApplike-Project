@@ -106,8 +106,9 @@ class chatRepository {
     }
 
 
-    async getChatsForUser(userId) {
-        const chats = await Schema.find({ participants: userId })
+    async getChatsForUser() {
+        const chats = await Schema.find({ participants: this.userId })
+       
             .populate('participants', 'name phoneNumber image')
             .populate('group')
             .populate({
@@ -124,40 +125,82 @@ class chatRepository {
             if (!chat.isGroup) {
                 // Only include the other participant (not the logged-in user)
                 chat.participants = chat.participants.filter(
-                    p => p._id.toString() !== userId.toString()
+                    p => p._id.toString() !== this.userId.toString()
                 );
             }
             return chat;
         });
 
-        return modifiedChats;
+       return modifiedChats;
+    
     }
 
     async getChatById(id) {
-        const OneChat = Schema.findById(id)
+        const chat = await Schema.findById(id)
             .populate('participants', 'name phoneNumber image')
             .populate('group')
             .populate({
                 path: 'lastMessage',
-                populate: {
-                    path: 'sender',
-                    select: 'name'
-                }
+                populate: { path: 'sender', select: 'name' }
             })
+            .lean(); 
+        if (!chat) return null;
 
-        const modifiedChat = OneChat.map(chat => {
-            if (!chat.isGroup) {
-                // Only include the other participant (not the logged-in user)
-                chat.participants = chat.participants.filter(
-                    p => p._id.toString() !== userId.toString()
-                );
-            }
-            return OneChat;
-        });
-        return modifiedChat
+      
+        if (!chat.isGroup) {
+            chat.participants = chat.participants.filter(
+                p => p._id.toString() !== this.userId.toString()
+            );
+        }
+
+        return chat;
     }
 
-    async 
+
+    async updateChatById(id) {
+        const updateBody = this.requestBody;
+        return await Schema.findByIdAndUpdate(id, updateBody, { new: true })
+    }
+
+    async deleteOneToOneChatWith(reciverId) {
+    const chat = await Schema.findOne({
+        participants: { $all: [this.userId, reciverId] }
+    });
+
+    if (!chat) return null;
+
+    // ✅ Handle Group Chat Case
+    if (chat.isGroup) {
+        chat.participants = chat.participants.filter(
+            p => p.toString() !== this.userId.toString()
+        );
+        return await chat.save();  // 🔁 Save group chat with user removed
+    } 
+    // ✅ Handle 1-to-1 Chat Case
+    else {
+        if (chat.participants.length === 2) {
+            return await Schema.findByIdAndDelete(chat._id);  // 🔁 Delete entire chat
+        } else {
+            return null;
+        }
+    }
+}
+
+    async addParticipantsToGroup(chatId, newParticipants) {
+        return await Schema.findByIdAndUpdate(
+            chatId,
+            { $addToSet: { participants: { $each: newParticipants } } },
+            { new: true })
+            .populate('participants', 'name phoneNumber image')
+    }
+
+    async removeParticipantsFromGroup(chatId, userIdRemove) {
+        return await Schema.findByIdAndUpdate(
+            chatId,
+            { $pull: { participants: userIdRemove } },
+            { new: true }
+        ).populate('participants', 'name phoneNumber image')
+    }
 
 }
 

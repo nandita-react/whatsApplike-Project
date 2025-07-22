@@ -11,7 +11,7 @@ async function generateSecureOtp(phoneNumber) {
 
   const hashedOtp = CryptoJS.AES.encrypt(JSON.stringify(combined), SECRET_KEY).toString();
 
-  return { hashedOtp };
+  return {otp, hashedOtp };  
 }
 
 

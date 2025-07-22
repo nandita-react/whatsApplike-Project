@@ -1,59 +1,72 @@
-const Repository=require('./repository');
-const handler=require('../handler');
-const { request, response } = require('express');
+const MessageRepository = require('./repository');
+const handler = require('../handler'); // Custom response handler (adjust path as needed)
 
+exports.createMessage = async (req, res) => {
+    const repo = new MessageRepository(req);
+    try {
+        const message = await repo.createMessage();
+        return handler.successResponse(res, message, "Message created");
+    } catch (err) {
+        return handler.errorResponse(res, err);
+    }
+};
 
-// exports.send=async(request,response)=>{
-//     const msgRepo=new Repository(request);
-//     try{
-//         const msg=await msgRepo.send();
-//      return   handler.createdResponse(response,msg,"Message create Successfully")
-//     }catch(error){
-//       return  handler.errorResponse(response,error)
-//     }
-// }
+exports.getMessagesByChat = async (req, res) => {
+    const repo = new MessageRepository(req);
+    try {
+        const messages = await repo.getMessageByChat(req.params.chatId);
+        return handler.successResponse(res, messages, "Messages fetched");
+    } catch (err) {
+        return handler.errorResponse(res, err);
+    }
+};
 
-// exports.edit=async(request,response)=>{
-//     const msgRepo=new Repository(request);
-//     try{
-//         const msgEdit=await msgRepo.edit(request.params.editId);
-//      return   handler.successResponse(response,msgEdit,"Message Edit Successfully")
-//     }
-//     catch(error){
-//      return   handler.errorResponse(response,error);
-//     }
-// }
+exports.editMessage = async (req, res) => {
+    const repo = new MessageRepository(req);
+    try {
+        const updated = await repo.editMessage(req.params.id);
+        return handler.successResponse(res, updated, "Message updated");
+    } catch (err) {
+        return handler.errorResponse(res, err);
+    }
+};
 
-// exports.delete=async(request,response)=>{
-//     const msgRepo=new Repository(request);
-//    try{
-//     const msgdelete=await msgRepo.delete(request.params.deleteId);
-//     handler.successResponse(response,msgdelete,"Message delete Successfully")
-//    }
-//    catch(error){
-//    return handler.createdResponse(response,error);
-//    }
-// }
+exports.deleteMessageForUser = async (req, res) => {
+    const repo = new MessageRepository(req);
+    try {
+        const result = await repo.deleteMessageForUser(req.params.messageId);
+        return handler.successResponse(res, result, "Message deleted for user");
+    } catch (err) {
+        return handler.errorResponse(res, err);
+    }
+};
 
-// exports.softDelete=async(request,response)=>{
-//     const msgRepo=new Repository(request);
-//   try{
-//     const softmsg=await msgRepo.softdelete(request.params.softdeleteId);
-//     return handler.successResponse(response,softmsg,"Soft Message  delete Successfully")
-//    }
-//    catch(error){
-//    return handler.createdResponse(response,error);
-//    }
-  
-// }
+exports.reactToMessage = async (req, res) => {
+    const repo = new MessageRepository(req);
+    try {
+      const message=  await repo.reactMessage(req.params.messageId);
+        return handler.successResponse(res, message , "Reaction updated");
+    } catch (err) {
+        return handler.errorResponse(res, err);
+    }
+};
 
-exports.getAll=async(request,response)=>{
-    const msgRepo=new Repository(request);
-  try{
-    const messages = await msgRepo.getMessage(filter);
-    return handler.successResponse(response, messages, "Messages fetched");
-  }
-  catch (error) {
-    return handler.errorResponse(response,error);
-  }
-}
+exports.removeReaction = async (req, res) => {
+    const repo = new MessageRepository(req);
+    try {
+        const updated = await repo.removeReaction(req.params.messageId);
+        return handler.successResponse(res, updated, "Reaction removed");
+    } catch (err) {
+        return handler.errorResponse(res, err);
+    }
+};
+
+exports.forwardMessage = async (req, res) => {
+    const repo = new MessageRepository(req);
+    try {
+        const forwarded = await repo.forwardMessageToChat(req.params.messageId, req.params.chatId);
+        return handler.successResponse(res, forwarded, "Message forwarded");
+    } catch (err) {
+        return handler.errorResponse(res, err);
+    }
+};

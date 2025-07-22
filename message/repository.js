@@ -1,49 +1,108 @@
-const Message=require("./schema");
+const Message = require("./schema");
+const Chat = require("../chat/schema")
 
-class messageRepository{
-    constructor(request){
-        this.requestBody=request?.body;
-            this.query = request.query; 
-          this.userId=request?.userId
+
+class messageRepository {
+    constructor(request) {
+        this.requestBody = request?.body;
+        this.query = request.query;
+        this.userId = request?.userId
     }
 
-    // async send(){
-    //     this.requestBody.createdBy=this.userId;
-    //     const message=new Message(this.requestBody);
-    //     return await message.save();
+
+
+    async createMessage() {
+        const newMessage = new Message({
+            ...this.requestBody,
+            sender: this.userId
+        });
+
+        await Chat.findByIdAndUpdate(newMessage.chat, { lastMessage: newMessage._id });
+
+        return await newMessage.save();
+    }
+
+    async getMessageByChat(id) {
+        const message = await Message.find({ chat: id })
+            .populate('sender', 'name')
+            .populate('replyTo')
+            .populate('forwardedFrom', 'name')
+            .populate('reactions.user', 'name')
+            .sort({ createdAt: 1 });
+
+        return message
+    }
+
+    async editMessage(id) {
+        return await Message.findByIdAndUpdate(id, { content: this.requestBody.content, isEdited: true }, { new: true })
+    }
+
+    async deleteMessageForUser(messageId) {
+        return await Message.findByIdAndUpdate(
+            messageId,
+            { $addToSet: { deletedBy: this.userId } },
+            { new: true }
+        );
+    }
+
+    async reactMessage(id) {
+        const { emoji } = this.requestBody;
+        const message = await Message.findById(id);
+
+        // Filter out any previous reaction by this user
+        message.reactions = message.reactions.filter(
+            r => r.user.toString() !== this.userId.toString()
+        );
+
+        // Add the new reaction
+        message.reactions.push({ emoji, user: this.userId });
+
+        await message.save();
+        return message;
+    }
+
+    // async reactMessage(id) {
+    //     const { emoji } = this.requestBody;
+    //     const message = await Message.findById(id);
+
+    //     const existingReactionIndex = message.reactions.findIndex(
+    //         r => r.user.toString() === this.userId.toString()
+    //     );
+
+    //     if (existingReactionIndex !== -1) {
+    //         // If user already reacted, update their emoji
+    //         message.reactions[existingReactionIndex].emoji = emoji;
+    //     } else {
+    //         // Else, add new reaction
+    //         message.reactions.push({ emoji, user: this.userId });
+    //     }
+
+    //     await message.save();
+    //     return message;
     // }
-    // async edit(messageId){
-    //     return await Message.findByIdAndUpdate(messageId,{content:this.requestBody.content,isEdited:true},{new:true})
-    // }
 
-    // async delete(messageId){
-    //     return await Message.findByIdAndDelete(messageId)
-    // }
 
-    // async softdelete(messageId){
-    //     return await Message.findByIdAndUpdate(messageId,{$addToSet:{deletedBy:this.userId}},{new:true})
-    // }
+    async removeReaction(id) {
+        return await Message.findByIdAndUpdate(id, { $pull: { reactions: { user: this.userId } } }, { new: true })
+    }
 
-    // async find(filter={}){
-    //     return await Message.find(filter).populate('sender receiver group').sort({ createdAt: 1 });
-    // }
+    async forwardMessageToChat(messageId, chatId) {
+        const originalMessage = await Message.findById(messageId);
+        if (!originalMessage) throw new Error('Original message not found');
 
-   async getMessage(){
-       const{receiverId,groupId}=this.query
+        const newMessage = await Message.create({
+            chat: chatId,
+            sender: this.userId,
+            content: originalMessage.content,
+            messageType: originalMessage.messageType,
+            forwardedFrom: originalMessage.sender,
+        });
 
-       if(groupId){
-        return await Message.find({group:groupId}).sort({createdAt:1})
-       }
+        // Optionally update lastMessage in Chat
+        await Chat.findByIdAndUpdate(chatId, { lastMessage: newMessage._id });
 
-       if(receiverId){
-        return await Message.find({
-              $or: [
-          { sender: this.userId, receiver: receiverId },
-          { sender: receiverId, receiver: this.userId }
-        ]
-        }).sort({ createdAt: 1 });
-       }
-   } 
+        return newMessage;
+    }
 }
 
-module.exports=messageRepository;
+module.exports = messageRepository;
