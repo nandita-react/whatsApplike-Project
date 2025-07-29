@@ -12,16 +12,10 @@ const chatSchema = new mongoose.Schema({
       type: Boolean,
       default: false,
     },
-    group: {
-      name: { type: String },
-      image: { type: String },
-      admin: [
-        {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-      ],
-    },
+     group: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Group", // reference your new Group schema
+  },
     lastMessage: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message",

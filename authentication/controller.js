@@ -41,10 +41,11 @@ exports.sendOtp = async (request, response) => {
     try {
         const { phoneNumber } = request.body;
 
-        const result = await auth.sendOtp(phoneNumber);
-        const sessionId = result?.Details; // extract sessionId properly
+        const result = await auth.sendOtp(`+91${phoneNumber}`); 
+        console.log("result",request)// ensure +91 or country code is passed
+        const sid = result?.sid;
 
-        return handler.successResponse(response, { sessionId, phoneNumber }, 'OTP create successfully');
+        return handler.successResponse(response, {sid,  phoneNumber }, 'OTP create successfully');
     }
     catch (error) {
         return handler.errorResponse(response, error);
@@ -53,11 +54,12 @@ exports.sendOtp = async (request, response) => {
 
 exports.verifyOtp = async (req, res) => {
     try {
-        const { sessionId, otp, phoneNumber } = req.body;
+        const { phoneNumber, otp } = req.body;
 
-        const data = await auth.verifyOtp(sessionId, otp);
+       const result = await auth.verifyOtp(`+91${phoneNumber}`, otp);
 
-        if (data.Details !== "OTP Matched") {
+        // ✔ Correct logic: status should be 'approved' for success
+        if (result.status !== 'approved') {
             throw new Error("OTP verification failed");
         }
 

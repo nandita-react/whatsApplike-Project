@@ -1,21 +1,21 @@
- const axios = require("axios");
-require("dotenv").config(); // load .env variables
+const twilio = require('twilio');
+require('dotenv').config();
 
-const API_KEY = process.env.TWO_FACTOR_API_KEY; // from your .env file
-console.log("Loaded API KEY:", API_KEY);
+const client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const SERVICE_ID = process.env.TWILIO_SERVICE_SID;
 
 exports.sendOtp = async (phoneNumber) => {
-  const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${phoneNumber}/AUTOGEN`;
-    const response = await axios.get(url);
-    return response.data;
-  
+    const verification = await client.verify.v2
+        .services(SERVICE_ID)
+        .verifications.create({ to: phoneNumber, channel: 'sms' });
+
+    return verification; // includes sid and status
 };
 
-exports.verifyOtp = async (sessionId, otp) => {
-  const url = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
+exports.verifyOtp = async (phoneNumber, otp) => {
+    const verification_check = await client.verify.v2
+        .services(SERVICE_ID)
+        .verificationChecks.create({ to: phoneNumber, code: otp });
 
-  
-    const response = await axios.get(url);
-    return response.data;
-  
+    return verification_check; // includes status
 };
