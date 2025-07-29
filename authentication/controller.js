@@ -4,38 +4,78 @@ const auth = require('../utils/generateOtp');
 const handler = require('../handler');
 const { request, response } = require('express');
 
+// exports.sendOtp = async (request, response) => {
+//     try {
+
+//         const { phoneNumber } = request.body;
+//         const { hashedOtp,otp } = await auth.generateSecureOtp(phoneNumber);
+//         handler.successResponse(response, {hashedOtp,otp}, 'OTP create successfully');
+//     }
+//     catch (error) {
+//         handler.errorResponse(response, error);
+//     }
+
+// }
+
+// exports.verifyOtp = async (req, res) => {
+//     try {
+//         const { phoneNumber, otp, hashedOtp } = req.body;
+
+//         await auth.verifyOtp({ otp, hashedOtp });
+
+//         const userRepo = new User(req);
+//         let user = await userRepo.findbyPhone(phoneNumber);
+
+//         if (!user) {
+
+//             return handler.successResponse(res,{ mode: "register" }, " Please Registered Atfast ");
+//         }
+//         return handler.successResponse(res, { user, mode: "login" }, "Please Login Atfast");
+    
+//     } catch (err) {
+//         return handler.errorResponse(res, err, 'OTP verification failed');
+//     }
+// };
+
 exports.sendOtp = async (request, response) => {
     try {
-
         const { phoneNumber } = request.body;
-        const { hashedOtp,otp } = await auth.generateSecureOtp(phoneNumber);
-        handler.successResponse(response, {hashedOtp,otp}, 'OTP create successfully');
+
+        const result = await auth.sendOtp(phoneNumber);
+        const sessionId = result?.Details; // extract sessionId properly
+
+        return handler.successResponse(response, { sessionId, phoneNumber }, 'OTP create successfully');
     }
     catch (error) {
-        handler.errorResponse(response, error);
+        return handler.errorResponse(response, error);
     }
-
 }
 
 exports.verifyOtp = async (req, res) => {
     try {
-        const { phoneNumber, otp, hashedOtp } = req.body;
+        const { sessionId, otp, phoneNumber } = req.body;
 
-        await auth.verifyOtp({ otp, hashedOtp });
+        const data = await auth.verifyOtp(sessionId, otp);
+
+        if (data.Details !== "OTP Matched") {
+            throw new Error("OTP verification failed");
+        }
 
         const userRepo = new User(req);
         let user = await userRepo.findbyPhone(phoneNumber);
 
         if (!user) {
 
-            return handler.successResponse(res,{ mode: "register" }, " Please Registered Atfast ");
+            return handler.successResponse(res, { mode: "register" }, " Please Registered Atfast ");
         }
         return handler.successResponse(res, { user, mode: "login" }, "Please Login Atfast");
-    
+
     } catch (err) {
-        return handler.errorResponse(res, err, 'OTP verification failed');
+        return handler.errorResponse(res, err);
     }
 };
+
+
 
 exports.registerUser = async (req, res) => {
     const userRepo = new User(req);

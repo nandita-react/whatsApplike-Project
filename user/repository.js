@@ -27,6 +27,15 @@ class userRepository {
         return await User.findByIdAndUpdate(id, { isOnline: this.requestBody.isOnline || false }, { new: true })
     }
 
+     async blockUsers(userId, blockUserId) {
+        return await User.findByIdAndUpdate(userId, { $addToSet: { blockedUsers: blockUserId } }, { new: true })
+    }
+
+    async unblockUsers(userId,unblockUserId){
+        return await User.findByIdAndUpdate(userId, { $pull: { blockedUsers: unblockUserId } }, { new: true })
+        
+    }
+
 }
 
 module.exports = userRepository;

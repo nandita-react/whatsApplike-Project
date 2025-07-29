@@ -24,7 +24,19 @@ const userSchema = new mongoose.Schema({
     isOnline: {
         type: Boolean,
         default: false
-    }
+    },
+    
+     status: {
+        type: String,
+        default: 'Hey there! I’m using ChatApp.'
+    },
+
+    blockedUsers: [
+        {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        }
+    ]
 
 }, {
     timestamps: true,
