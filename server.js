@@ -1,12 +1,14 @@
 const express = require('express');
 const app = express();
 require('dotenv').config();
+const path = require('path');
 
 //const http = require('http');
 const mongoose = require('mongoose');
 const router = require('./router/routes');
 //const setUpWebSocket = require('./webSocket');
 //const server = http.createServer(app);
+app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

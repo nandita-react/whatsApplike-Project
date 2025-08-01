@@ -1,5 +1,6 @@
 const { populate } = require('../user/schema');
 const Schema = require('./schema');
+const {formatChatTime} =require('./helper')
 
 class chatRepository {
     constructor(request) {
@@ -89,7 +90,8 @@ class chatRepository {
         if (!chat) {
             chat = new Schema({
                 participants: [this.userId, receiverId],
-                isGroup: false
+                isGroup: false,
+                createdBy: this.userId 
             });
             await chat.save()
         }
@@ -114,8 +116,8 @@ class chatRepository {
             .populate({
                 path: 'lastMessage',
                 populate: {
-                    path: 'sender',
-                    select: 'name'
+                    path: 'messageuser',select:'_id'
+                   
                 }
             })
             .sort({ updatedAt: -1 })
@@ -128,6 +130,10 @@ class chatRepository {
                     p => p._id.toString() !== this.userId.toString()
                 );
             }
+             if(chat.lastMessage?.createdAt){
+                chat.lastMessage.formattedTime=formatChatTime(chat.lastMessage.createdAt);
+             }
+
             return chat;
         });
 
@@ -141,11 +147,11 @@ class chatRepository {
             .populate('group')
             .populate({
                 path: 'lastMessage',
-                populate: { path: 'sender', select: 'name' }
+                  populate: { path: 'messageuser',select:'_id'}
             })
             .lean(); 
         if (!chat) return null;
-
+ 
       
         if (!chat.isGroup) {
             chat.participants = chat.participants.filter(

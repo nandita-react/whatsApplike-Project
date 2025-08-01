@@ -31,7 +31,7 @@ const { request, response } = require('express');
 //             return handler.successResponse(res,{ mode: "register" }, " Please Registered Atfast ");
 //         }
 //         return handler.successResponse(res, { user, mode: "login" }, "Please Login Atfast");
-    
+
 //     } catch (err) {
 //         return handler.errorResponse(res, err, 'OTP verification failed');
 //     }
@@ -41,11 +41,11 @@ exports.sendOtp = async (request, response) => {
     try {
         const { phoneNumber } = request.body;
 
-        const result = await auth.sendOtp(`+91${phoneNumber}`); 
-        console.log("result",request)// ensure +91 or country code is passed
+        const result = await auth.sendOtp(`+91${phoneNumber}`);
+        console.log("result", request)// ensure +91 or country code is passed
         const sid = result?.sid;
 
-        return handler.successResponse(response, {sid,  phoneNumber }, 'OTP create successfully');
+        return handler.successResponse(response, { sid, phoneNumber }, 'OTP create successfully');
     }
     catch (error) {
         return handler.errorResponse(response, error);
@@ -56,7 +56,7 @@ exports.verifyOtp = async (req, res) => {
     try {
         const { phoneNumber, otp } = req.body;
 
-       const result = await auth.verifyOtp(`+91${phoneNumber}`, otp);
+        const result = await auth.verifyOtp(`+91${phoneNumber}`, otp);
 
         // ✔ Correct logic: status should be 'approved' for success
         if (result.status !== 'approved') {
@@ -84,16 +84,15 @@ exports.registerUser = async (req, res) => {
 
     try {
         if (req.file) {
-            req.body.image = {
-                url: `/upload/${req.file.filename}`
-            }
+            const imageUrl = `${req.protocol}://${req.get('host')}/upload/${req.file.filename}`;
+            req.body.image = { url: imageUrl };
         }
         const user = await userRepo.create();
         const token = generateToken(user);
         return handler.createdResponse(res, { user, token }, "User Create Successfully")
     }
     catch (error) {
-        return handler.errorResponse(res,error)
+        return handler.errorResponse(res, error)
     }
 };
 
