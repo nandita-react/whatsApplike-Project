@@ -6,25 +6,21 @@ class messageRepository {
     constructor(request) {
         this.requestBody = request?.body;
         this.query = request.query;
-        this.userId = request?.userId
+        this.userId = request.user?._id;
     }
 
 
 
     async createMessage() {
-        const newMessage = new Message({
-            ...this.requestBody,
-            sender: this.userId
-        });
+        const newMessage = new Message(this.requestBody);
 
-        await Chat.findByIdAndUpdate(newMessage.chat, { lastMessage: newMessage._id });
-
+        console.log(newMessage);
         return await newMessage.save();
     }
 
     async getMessageByChat(id) {
         const message = await Message.find({ chat: id })
-            .populate('sender', 'name')
+            // .populate('sender', 'name')
             .populate('replyTo')
             .populate('forwardedFrom', 'name')
             .populate('reactions.user', 'name')

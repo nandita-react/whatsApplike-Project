@@ -13,8 +13,11 @@ module.exports = (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     //req.userId = decoded.userId;
-   req.userId=decoded.userId
-   console.log("decoded");
+    req.user = {
+      _id: decoded.userId,
+      phoneNumber: decoded.phoneNumber
+    };
+   
     next();
   } catch (err) {
     return res.status(401).json({ status: 'error', message: 'Invalid or expired token' });

@@ -1,13 +1,14 @@
 const { populate } = require('../user/schema');
 const Schema = require('./schema');
 const {formatChatTime} =require('./helper')
+const mongoose = require('mongoose');
 
 class chatRepository {
     constructor(request) {
         this.requestBody = request?.body;
-        this.userId = request?.userId;
+       this.userId = request.user?._id;
 
-        console.log(request.user);
+      //  console.log(request.user);
     }
 
 
@@ -110,7 +111,6 @@ class chatRepository {
 
     async getChatsForUser() {
         const chats = await Schema.find({ participants: this.userId })
-       
             .populate('participants', 'name phoneNumber image')
             .populate('group')
             .populate({
@@ -136,7 +136,7 @@ class chatRepository {
 
             return chat;
         });
-
+       // console.log(chats);
        return modifiedChats;
     
     }
