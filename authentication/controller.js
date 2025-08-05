@@ -84,7 +84,7 @@ exports.registerUser = async (req, res) => {
 
     try {
         if (req.file) {
-            const imageUrl = `${req.protocol}://${req.get('host')}/upload/${req.file.filename}`;
+            const imageUrl = `/upload/${req.file.filename}`;
             req.body.image = { url: imageUrl };
         }
         const user = await userRepo.create();

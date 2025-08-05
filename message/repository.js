@@ -20,7 +20,7 @@ class messageRepository {
 
     async getMessageByChat(id) {
         const message = await Message.find({ chat: id })
-            // .populate('sender', 'name')
+            .populate('messageuser', 'name')
             .populate('replyTo')
             .populate('forwardedFrom', 'name')
             .populate('reactions.user', 'name')
@@ -98,6 +98,19 @@ class messageRepository {
         await Chat.findByIdAndUpdate(chatId, { lastMessage: newMessage._id });
 
         return newMessage;
+    }
+
+
+    async markAsDelivery(messageId, receiverId) {
+        return await Message.findByIdAndUpdate(messageId, { $addToSet: { deliveredTo: receiverId } })
+    }
+
+    async markAsRead(messageId, readerId) {
+        return await Message.findByIdAndUpdate(messageId, { $addToSet: { readBy: readerId } })
+    }
+
+    async getMessageById(messageId) {
+        return Message.findById(messageId);
     }
 }
 

@@ -4,6 +4,31 @@ const handler = require('../handler'); // Custom response handler (adjust path a
 exports.createMessage = async (req, res) => {
     const repo = new MessageRepository(req);
     try {
+
+        if (req.file) {
+            const fileUrl = `/upload/${req.file.filename}`;
+            req.body.content = `${fileUrl}`;
+            if (req.file.mimetype.startsWith('image/')) {
+                req.body.messageType = 'image';
+            } else if (req.file.mimetype.startsWith('video/')) {
+                req.body.messageType = 'video';
+            } else if (req.file.mimetype === 'application/pdf') {
+                req.body.messageType = 'file';
+            } else {
+                req.body.messageType = 'file';
+            }
+        } else if (req.body.content) {
+
+            const content = req.body.content.trim();
+
+            const isURL = /^https?:\/\/[\w\-]+(\.[\w\-]+)+[/#?]?.*$/.test(content);
+
+            if (isURL) {
+                req.body.messageType = 'link';
+            } else {
+                req.body.messageType = 'text';
+            }
+        }
         const message = await repo.createMessage();
         return handler.successResponse(res, message, "Message created");
     } catch (err) {
@@ -44,8 +69,8 @@ exports.deleteMessageForUser = async (req, res) => {
 exports.reactToMessage = async (req, res) => {
     const repo = new MessageRepository(req);
     try {
-      const message=  await repo.reactMessage(req.params.messageId);
-        return handler.successResponse(res, message , "Reaction updated");
+        const message = await repo.reactMessage(req.params.messageId);
+        return handler.successResponse(res, message, "Reaction updated");
     } catch (err) {
         return handler.errorResponse(res, err);
     }

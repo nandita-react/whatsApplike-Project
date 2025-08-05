@@ -12,7 +12,7 @@ module.exports = (io, socket) => {
         try {
             const newMessage = await Message.create({
                 chat: chatId,
-                sender: senderId,
+                messageuser: senderId,
                 content,
                 messageType
             })
@@ -51,7 +51,7 @@ module.exports = (io, socket) => {
             });
             const message=await Message.findById(messageId);
             if(message){
-                const senderSocketId=onlinerUsers.get(message.sender.toString());
+                const senderSocketId=onlinerUsers.get(message.messageuser.toString());
                 if(senderSocketId){
                     io.to(senderSocketId).emit("message:read",{
                         messageId,

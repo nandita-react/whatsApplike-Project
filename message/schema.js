@@ -17,7 +17,7 @@ const messageSchema = new mongoose.Schema({
   },
   messageType: {
     type: String,
-    enum: ["text", "image", "video", "file"],
+    enum: ["text", "image", "video", "file", "link"],
     default: "text",
   },
   isEdited: {
