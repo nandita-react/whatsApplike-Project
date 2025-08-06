@@ -32,7 +32,7 @@ module.exports = (io, socket) => {
                     userId: data.receiverId
                 });
             } else {
-                console.log(`User ${receiverId} is offline. Consider push or store for later.`);
+                console.log(`User ${data.receiverId} is offline. Consider push or store for later.`);
             }
         } catch (err) {
             console.log("Message send error", err)
