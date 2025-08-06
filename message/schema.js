@@ -13,12 +13,14 @@ const messageSchema = new mongoose.Schema({
   },
   content: {
     type: String,
-    required: true,
+  },
+   mediaUrl: {
+    type: String
   },
   messageType: {
     type: String,
     enum: ["text", "image", "video", "file", "link"],
-    default: "text",
+    default: "image",
   },
   isEdited: {
     type: Boolean,
@@ -59,6 +61,7 @@ const messageSchema = new mongoose.Schema({
       ref: "User",
     },
   ],
+ 
 },
   {
     timestamps: true,

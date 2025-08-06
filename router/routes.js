@@ -8,6 +8,6 @@ router.use("/message",require("./message"))
 router.use("/reports",require("./report"))
 router.use("/auth",require("./auth"));
 router.use("/chats",require("./chat"));
-router.use("/message",require("./message"))
+router.use("/upload",require("./upload"))
 
 module.exports=router;
