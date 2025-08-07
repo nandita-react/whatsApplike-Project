@@ -12,28 +12,42 @@ module.exports = (io, socket) => {
 
 
         try {
-            const newMessage = await Message.create(data)
+            const newMessage = await Message.create(data);
 
-            io.to(socket.id).emit("message:sent", newMessage);
-            const receiverSocketId = onlinerUsers.get(data.receiverId);
+            io.to(socket.id).emit('message:sent', newMessage);
 
-            if (receiverSocketId) {
-                // ✅✅ Emit to receiver
-                io.to(receiverSocketId).emit("receiveMessage", newMessage);
+            // io.to(receiverSocketId).emit("receiveMessage", newMessage);
 
-                // ✅✅ Add to deliveredTo
-                await Message.findByIdAndUpdate(newMessage._id, {
-                    $addToSet: { deliveredTo: data.receiverId }
-                });
+            // ✅✅ Add to deliveredTo
+            await Message.findByIdAndUpdate(newMessage._id, {
+                $addToSet: { deliveredTo: data.receiverId }
+            });
 
-                // Notify sender about delivery
-                io.to(socket.id).emit("message:delivered", {
-                    messageId: newMessage._id,
-                    userId: data.receiverId
-                });
-            } else {
-                console.log(`User ${data.receiverId} is offline. Consider push or store for later.`);
-            }
+            // Notify sender about delivery
+            io.to(socket.id).emit("message:delivered", {
+                messageId: newMessage._id,
+                userId: data.receiverId
+            });
+
+            // const receiverSocketId = onlinerUsers.get(data.receiverId);
+
+            // if (receiverSocketId) {
+            //     // ✅✅ Emit to receiver
+            //     io.to(receiverSocketId).emit("receiveMessage", newMessage);
+
+            //     // ✅✅ Add to deliveredTo
+            //     await Message.findByIdAndUpdate(newMessage._id, {
+            //         $addToSet: { deliveredTo: data.receiverId }
+            //     });
+
+            //     // Notify sender about delivery
+            //     io.to(socket.id).emit("message:delivered", {
+            //         messageId: newMessage._id,
+            //         userId: data.receiverId
+            //     });
+            // } else {
+            //     console.log(`User ${data.receiverId} is offline. Consider push or store for later.`);
+            // }
         } catch (err) {
             console.log("Message send error", err)
         }
@@ -83,7 +97,7 @@ module.exports = (io, socket) => {
                     $addToSet: { deliveredTo: receiverId }
                 })
 
-                io.to(socket.io).emit("message:delivered", {
+                io.to(socket.id).emit("message:delivered", {
                     messageId: newMessage._id,
                     userId: receiverId
 
@@ -94,23 +108,31 @@ module.exports = (io, socket) => {
         }
     })
 
-    socket.on("editMessage",async({messageId,content,userId})=>{
-        const message=await Message.findById(messageId)
+    socket.on("editMessage", async ({ messageId, content, userId }) => {
+        try {
+            const message = await Message.findById(messageId);
+            if (!message) return;
 
-        message.content=content;
-        message.isEdited=true;
+            message.content = content;
+            message.isEdited = true;
+            await message.save();
 
-
-        await message.save();
-        io.to(socket.io).emit("message:edited", message);
-    })
+            io.to(socket.id).emit("message:edited", message);
+        } catch (err) {
+            console.log("Edit message error:", err);
+        }
+    });
 
     socket.on("deleteMessageForUser", async ({ messageId, userId }) => {
-      await Message.findByIdAndUpdate(messageId, {
-        $addToSet: { deletedBy: userId }
-      });
+        try {
+            await Message.findByIdAndUpdate(messageId, {
+                $addToSet: { deletedBy: userId }
+            });
 
-      io.to(socket.id).emit("message:deleted", { messageId, userId });
+            io.to(socket.id).emit("message:deleted", { messageId, userId });
+        } catch (err) {
+            console.log("Delete message error:", err);
+        }
     });
 
     socket.on("typing", ({ senderId, receiverId }) => {
@@ -120,11 +142,10 @@ module.exports = (io, socket) => {
         }
     });
 
-    socket.on("stopTyping ", ({ senderId, receiverId }) => {
+    socket.on("stopTyping", ({ senderId, receiverId }) => {
         const receiverSocketId = onlinerUsers.get(receiverId);
-
         if (receiverSocketId) {
-            io.to(receiverSocketId).emit("stopTying", { senderId })
+            io.to(receiverSocketId).emit("stopTyping", { senderId });
         }
-    })
+    });
 }

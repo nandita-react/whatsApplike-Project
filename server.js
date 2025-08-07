@@ -3,11 +3,11 @@ const app = express();
 require('dotenv').config();
 const path = require('path');
 
-//const http = require('http');
+const http = require('http');
 const mongoose = require('mongoose');
 const router = require('./router/routes');
-//const setUpWebSocket = require('./webSocket');
-//const server = http.createServer(app);
+const setUpWebSocket = require('./webSocket');
+const server = http.createServer(app);
 app.use('/upload', express.static(path.join(__dirname, 'upload')));
 
 app.use(express.urlencoded({ extended: true }));
@@ -20,10 +20,10 @@ mongoose.connect(process.env.MONGODB_URI
 
 app.use("/api", router);
 
-//setUpWebSocket(server);
+setUpWebSocket(server);
 
 const PORT = process.env.PORT || 8000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(` Server running at http://${process.env.HOST || 'localhost'}:${PORT}`);
 });
