@@ -5,54 +5,39 @@ const onlinerUsers = require('../utils/onlineUsers');
 
 
 module.exports = (io, socket) => {
-    socket.on("sendMessage", async (data) => {
-
-        console.log(`${data.senderId}->${data.receiverId} :${data.content}`);
-
-
-
+   socket.on("sendMessage", async ({ senderId, receiverId, chatId, content, messageType = "text" }) => {
+ 
         try {
-            const newMessage = await Message.create(data);
-
-            io.to(socket.id).emit('message:sent', newMessage);
-
-            // io.to(receiverSocketId).emit("receiveMessage", newMessage);
-
-            // ✅✅ Add to deliveredTo
-            await Message.findByIdAndUpdate(newMessage._id, {
-                $addToSet: { deliveredTo: data.receiverId }
-            });
-
-            // Notify sender about delivery
-            io.to(socket.id).emit("message:delivered", {
-                messageId: newMessage._id,
-                userId: data.receiverId
-            });
-
-            // const receiverSocketId = onlinerUsers.get(data.receiverId);
-
-            // if (receiverSocketId) {
-            //     // ✅✅ Emit to receiver
-            //     io.to(receiverSocketId).emit("receiveMessage", newMessage);
-
-            //     // ✅✅ Add to deliveredTo
-            //     await Message.findByIdAndUpdate(newMessage._id, {
-            //         $addToSet: { deliveredTo: data.receiverId }
-            //     });
-
-            //     // Notify sender about delivery
-            //     io.to(socket.id).emit("message:delivered", {
-            //         messageId: newMessage._id,
-            //         userId: data.receiverId
-            //     });
-            // } else {
-            //     console.log(`User ${data.receiverId} is offline. Consider push or store for later.`);
-            // }
+            const newMessage = await Message.create({
+                chat: chatId,
+                messageuser: senderId,
+                content,
+                messageType
+            })
+ 
+            // io.to(socket.id).emit("message:sent", newMessage);
+            const receiverSocketId = onlinerUsers.get(receiverId);
+ 
+            if (receiverSocketId) {
+                // ✅✅ Emit to receiver
+                io.to(receiverSocketId).emit("receiveMessage", newMessage);
+ 
+                // ✅✅ Add to deliveredTo
+                await Message.findByIdAndUpdate(newMessage._id, {
+                    $addToSet: { deliveredTo: receiverId }
+                });
+ 
+                // Notify sender about delivery
+                io.to(socket.id).emit("message:delivered", {
+                    messageId: newMessage._id,
+                    userId: receiverId
+                });
+            } else {
+                console.log(`User ${receiverId} is offline. Consider push or store for later.`);
+            }
         } catch (err) {
             console.log("Message send error", err)
         }
-
-
     });
 
     socket.on("message:read", async ({ messageId, readerId }) => {
